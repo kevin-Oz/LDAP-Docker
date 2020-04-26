@@ -16,6 +16,9 @@ RUN echo "slapd slapd/no_configuration boolean false" | debconf-set-selections \
 && echo "slapd slapd/move_old_database boolean true" | debconf-set-selections 
 
 RUN dpkg-reconfigure -f noninteractive slapd
+RUN apt-get install -y wget && wget https://raw.githubusercontent.com/asterisk/asterisk/master/contrib/scripts/asterisk.ldif -P /etc/ldap/schema && \
+wget https://raw.githubusercontent.com/asterisk/asterisk/master/contrib/scripts/asterisk.ldap-schema -P /etc/ldap/schema && \
+mv /etc/ldap/schema/asterisk.ldap-schema /etc/ldap/schema/asterisk.schema 
 #crear archivos de config para replicacion .ldif
 WORKDIR /
 RUN echo "\
@@ -40,5 +43,7 @@ EXPOSE 389
 RUN echo "#\!/bin/bash \n\
 echo \$IPMASTER && echo \${IP1MASTER} && \
 sed -i -e \"s/IPMASTER/\$IPMASTER/\" syncrepl.ldif && \
-service slapd start  && ldapadd -Y EXTERNAL -H ldapi:/// -f syncrepl.ldif && tail -f /dev/null " > entrypoint.sh && chmod +x entrypoint.sh
+service slapd start  && \
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/asterisk.ldif \
+&& ldapadd -Y EXTERNAL -H ldapi:/// -f syncrepl.ldif && tail -f /dev/null " > entrypoint.sh && chmod +x entrypoint.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
