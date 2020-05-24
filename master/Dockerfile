@@ -64,14 +64,13 @@ AstAccountHost: dynamic\n\
 AstAccountType: friend\n\
 AstAccountRealmedPassword: 12345" > usuarios.ldif
 ## falta crear archivo para usuario lector para no usar admin como user de replicacion
-
+RUN service slapd start && ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/asterisk.ldif \
+&& ldapadd -x -D "cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv" -w admin -f organization.ldif\
+&& ldapadd -x -D "cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv" -w admin -f usuarios.ldif && ldapadd -Y EXTERNAL -H ldapi:/// -f mod_syncprov.ldif && \
+ldapadd -Y EXTERNAL -H ldapi:/// -f syncprov.ldif
 #exponer puerto de ldap
 EXPOSE 389
 
 RUN echo "#\!/bin/bash \n\
-service slapd start && ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/asterisk.ldif \
-&& ldapadd -x -D \"cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv\" -w admin -f organization.ldif &&\
-ldapadd -x -D \"cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv\" -w admin -f usuarios.ldif && ldapadd -Y EXTERNAL -H ldapi:/// -f mod_syncprov.ldif && \
-ldapadd -Y EXTERNAL -H ldapi:/// -f syncprov.ldif\
-&& tail -f /dev/null " > entrypoint.sh && chmod +x entrypoint.sh
+slapd -d -1" > entrypoint.sh && chmod +x entrypoint.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
