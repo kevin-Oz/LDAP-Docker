@@ -41,8 +41,9 @@ olcSyncRepl: rid=001\n\
 EXPOSE 389
 
 RUN echo "#\!/bin/bash \n\
-sed -i -e "s/IPMASTER/\$IPMASTER/" syncrepl.ldif && service slapd start  && \
-ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/asterisk.ldif \
-&& ldapadd -Y EXTERNAL -H ldapi:/// -f syncrepl.ldif \
-slapd -d -1 " > entrypoint.sh && chmod +x entrypoint.sh
+service slapd start && ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/asterisk.ldif \
+&& ldapadd -x -D \"cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv\" -w admin -f organization.ldif &&\
+ldapadd -x -D \"cn=admin,dc=paneschucos,dc=occ,dc=ues,dc=edu,dc=sv\" -w admin -f usuarios.ldif && ldapadd -Y EXTERNAL -H ldapi:/// -f mod_syncprov.ldif && \
+ldapadd -Y EXTERNAL -H ldapi:/// -f syncprov.ldif\
+&& tail -f /dev/null " > entrypoint.sh && chmod +x entrypoint.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
